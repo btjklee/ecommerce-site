@@ -20,6 +20,10 @@ class Product(db.Model):
 with app.app_context():
     db.create_all()
 
+@app.route('/')
+def home():
+    return "E-commerce site is running!"
+
 # Route to Add a Product
 @app.route('/add_product', methods=['POST'])
 def add_product():
