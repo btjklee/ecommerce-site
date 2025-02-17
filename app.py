@@ -103,7 +103,7 @@ def get_orders():
     ])
 
 # Replace with your Stripe Secret Key
-stripe.api_key = "sk_test_YOUR_SECRET_KEY"
+stripe.api_key = "sk_test_51Qtawu2NvkwdcPoHb8CzLo3nDobOA64KQ1ZZDpe084Jbk239Pv9auOD7A9emwrcFnuN3ADtEKzci9dCQx56GPKTq00cnNvUfhP"
 
 @app.route('/create-payment-intent', methods=['POST'])
 def create_payment():

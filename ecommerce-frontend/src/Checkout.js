@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 
-const stripePromise = loadStripe("pk_test_YOUR_PUBLISHABLE_KEY");
+const stripePromise = loadStripe("pk_test_51Qtawu2NvkwdcPoHVu1iQm1SUDuuItazwayHRfpMi2P6rh43w748DgIIDwSEy4jcnEJJ7DerMewGsSkgbx2kP2Rz002q8yelSc");
 
 const CheckoutForm = ({ totalAmount }) => {
     const stripe = useStripe();
