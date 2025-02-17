@@ -1,48 +1,64 @@
 import React, { useState } from "react";
+import { loadStripe } from "@stripe/stripe-js";
+import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 
-const Checkout = ({ cart }) => {
-    const [name, setName] = useState("");
-    const [address, setAddress] = useState("");
+const stripePromise = loadStripe("pk_test_YOUR_PUBLISHABLE_KEY");
+
+const CheckoutForm = ({ totalAmount }) => {
+    const stripe = useStripe();
+    const elements = useElements();
+    const [error, setError] = useState(null);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        const orderData = {
-            name,
-            address,
-            items: cart,  // Send cart items
-        };
+        const { paymentMethod, error } = await stripe.createPaymentMethod({
+            type: "card",
+            card: elements.getElement(CardElement),
+        });
 
-        try {
-            const response = await fetch("http://localhost:5000/checkout", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(orderData),
-            });
+        if (error) {
+            setError(error.message);
+            return;
+        }
 
-            if (response.ok) {
-                alert("Order submitted successfully!");
-                // Optionally clear cart here
-            } else {
-                alert("Order submission failed.");
-            }
-        } catch (error) {
-            console.error("Error submitting order:", error);
+        const response = await fetch("https://ecommerce-site-l9ti.onrender.com/create-payment-intent", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ amount: totalAmount }),
+        });
+
+        const { clientSecret } = await response.json();
+        const result = await stripe.confirmCardPayment(clientSecret, {
+            payment_method: paymentMethod.id,
+        });
+
+        if (result.error) {
+            setError(result.error.message);
+        } else {
+            alert("Payment Successful!");
         }
     };
 
     return (
-        <div>
+        <form onSubmit={handleSubmit}>
+            <CardElement />
+            {error && <p style={{ color: "red" }}>{error}</p>}
+            <button type="submit" disabled={!stripe}>Pay Now</button>
+        </form>
+    );
+};
+
+const Checkout = ({ cart }) => {
+    const totalAmount = cart.reduce((sum, item) => sum + item.price, 0);
+
+    return (
+        <Elements stripe={stripePromise}>
             <h2>Checkout</h2>
-            <form onSubmit={handleSubmit}>
-                <label>Name: <input type="text" value={name} onChange={(e) => setName(e.target.value)} required /></label>
-                <br />
-                <label>Address: <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} required /></label>
-                <br />
-                <button type="submit">Submit Order</button>
-            </form>
-        </div>
+            <CheckoutForm totalAmount={totalAmount} />
+        </Elements>
     );
 };
 
 export default Checkout;
+

@@ -5,7 +5,11 @@ import Checkout from './Checkout';
 
 const App = () => {
     const [products, setProducts] = useState([]);
-    const [cart, setCart] = useState([]);
+    const [cart, setCart] = useState(() => {
+        // Load cart from localStorage on initial render
+        const savedCart = localStorage.getItem("cart");
+        return savedCart ? JSON.parse(savedCart) : [];
+    });
 
     // Fetch products from backend when page loads
     useEffect(() => {
@@ -14,6 +18,11 @@ const App = () => {
             .then(data => setProducts(data))
             .catch(error => console.error("Error fetching products:", error));
     }, []);
+
+    // Update localStorage whenever cart changes
+    useEffect(() => {
+        localStorage.setItem("cart", JSON.stringify(cart));
+    }, [cart]);
 
     const addToCart = (product) => {
         setCart([...cart, product]);
