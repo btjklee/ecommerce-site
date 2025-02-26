@@ -22,7 +22,6 @@ class Product(db.Model):
     description = db.Column(db.Text, nullable=True)
     image = db.Column(db.String(255), nullable=True)
 
-
 class Order(db.Model):
     __tablename__ = 'orders'  # Fix SQL conflict
 
@@ -31,30 +30,49 @@ class Order(db.Model):
     address = db.Column(db.String(200), nullable=False)
     items = db.Column(db.Text, nullable=False)  # JSON stored as text
 
+def populate_default_products():
+    """Ensure default products exist in the database after a restart."""
+    if not Product.query.first():  # Check if products table is empty
+        print("No products found. Adding default products...")
+        default_products = [
+            {"name": "Laptop", "price": 999.99, "description": "A powerful laptop",
+             "image": "https://images.unsplash.com/photo-1517336714731-489689fd1ca8"},
+            {"name": "Smartphone", "price": 799.99, "description": "Latest model smartphone",
+             "image": "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9"},
+            {"name": "Headphones", "price": 199.99, "description": "Noise-canceling headphones",
+             "image": "https://images.unsplash.com/photo-1516387938699-a93567ec168e"},
+            {"name": "Smartwatch", "price": 249.99, "description": "Water-resistant smartwatch",
+             "image": "https://images.unsplash.com/photo-1600096194903-3d5debb81d36"},
+            {"name": "Gaming Mouse", "price": 89.99, "description": "RGB gaming mouse",
+             "image": "https://images.unsplash.com/photo-1606821851227-0cb2f4b0a95a"}
+        ]
 
+        for product in default_products:
+            new_product = Product(**product)
+            db.session.add(new_product)
+        
+        db.session.commit()
+        print("Default products added.")
 
+# Initialize database and populate products if missing
 with app.app_context():
-    print("Creating database tables...")
+    print("Creating database tables if they don't exist...")
     db.create_all()
-    print("Tables created successfully!")
-
+    populate_default_products()
 
 @app.route('/')
 def home():
     return "E-commerce Backend is Running!"
 
 ### ---- PRODUCT ROUTES ---- ###
-
-# Get All Products
 @app.route('/products', methods=['GET'])
 def get_products():
     products = Product.query.all()
     return jsonify([
-        {"id": p.id, "name": p.name, "price": p.price, "description": p.description}
+        {"id": p.id, "name": p.name, "price": p.price, "description": p.description, "image": p.image}
         for p in products
     ])
 
-# Add a Product
 @app.route('/add_product', methods=['POST'])
 def add_product():
     data = request.json
@@ -64,13 +82,13 @@ def add_product():
     new_product = Product(
         name=data['name'],
         price=data['price'],
-        description=data.get('description', '')
+        description=data.get('description', ''),
+        image=data.get('image', '')  # Ensure image field is included
     )
     db.session.add(new_product)
     db.session.commit()
     return jsonify({"message": "Product added successfully!"}), 201
 
-# Delete a Product
 @app.route('/delete_product/<int:id>', methods=['DELETE'])
 def delete_product(id):
     product = Product.query.get(id)
@@ -82,8 +100,6 @@ def delete_product(id):
     return jsonify({"message": "Product deleted successfully!"})
 
 ### ---- CHECKOUT & ORDER ROUTES ---- ###
-
-# Handle Checkout & Save Orders in Database
 @app.route('/checkout', methods=['POST'])
 def checkout():
     data = request.json
@@ -100,7 +116,6 @@ def checkout():
     
     return jsonify({"message": "Order placed successfully!"}), 201
 
-# Get All Orders (For Admin)
 @app.route('/orders', methods=['GET'])
 def get_orders():
     orders = Order.query.all()
@@ -109,7 +124,7 @@ def get_orders():
         for o in orders
     ])
 
-# Replace with your Stripe Secret Key
+# Stripe Integration
 stripe.api_key = "sk_test_51Qtawu2NvkwdcPoHb8CzLo3nDobOA64KQ1ZZDpe084Jbk239Pv9auOD7A9emwrcFnuN3ADtEKzci9dCQx56GPKTq00cnNvUfhP"
 
 @app.route('/create-payment-intent', methods=['POST'])
@@ -117,20 +132,14 @@ def create_payment():
     try:
         data = request.json
         amount = int(data['amount'] * 100)  # Stripe uses cents
-        
-        # Create payment intent
         intent = stripe.PaymentIntent.create(
             amount=amount,
             currency='usd'
         )
-
         return jsonify({'clientSecret': intent['client_secret']}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 400
 
 if __name__ == '__main__':
-    with app.app_context():  # Ensure tables are created when the app runs
-        db.create_all()
-
     port = int(os.environ.get('PORT', 5000))  # Default port 5000
-    app.run(host='0.0.0.0', port=port, debug=False)  # Change debug=False
+    app.run(host='0.0.0.0', port=port, debug=False)
