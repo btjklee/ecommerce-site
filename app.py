@@ -14,23 +14,30 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
-# Product Model
 class Product(db.Model):
+    __tablename__ = 'products'  # Explicitly set table name
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     price = db.Column(db.Float, nullable=False)
     description = db.Column(db.Text, nullable=True)
+    image = db.Column(db.String(255), nullable=True)
 
-# Order Model
+
 class Order(db.Model):
+    __tablename__ = 'orders'  # Fix SQL conflict
+
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     address = db.Column(db.String(200), nullable=False)
     items = db.Column(db.Text, nullable=False)  # JSON stored as text
 
-# Create database tables on startup
+
+
 with app.app_context():
+    print("Creating database tables...")
     db.create_all()
+    print("Tables created successfully!")
+
 
 @app.route('/')
 def home():
@@ -122,5 +129,8 @@ def create_payment():
         return jsonify({'error': str(e)}), 400
 
 if __name__ == '__main__':
+    with app.app_context():  # Ensure tables are created when the app runs
+        db.create_all()
+
     port = int(os.environ.get('PORT', 5000))  # Default port 5000
-    app.run(host='0.0.0.0', port=port, debug=True)
+    app.run(host='0.0.0.0', port=port, debug=False)  # Change debug=False
