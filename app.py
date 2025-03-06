@@ -42,9 +42,9 @@ def populate_default_products():
             {"name": "Headphones", "price": 199.99, "description": "Noise-canceling headphones",
              "image": "https://images.unsplash.com/photo-1516387938699-a93567ec168e"},
             {"name": "Smartwatch", "price": 249.99, "description": "Water-resistant smartwatch",
-             "image": "https://images.unsplash.com/photo-1600096194903-3d5debb81d36"},
+             "image": "https://images.pexels.com/photos/267391/pexels-photo-267391.jpeg?auto=compress&cs=tinysrgb&w=1200"},
             {"name": "Gaming Mouse", "price": 89.99, "description": "RGB gaming mouse",
-             "image": "https://images.unsplash.com/photo-1606821851227-0cb2f4b0a95a"}
+             "image": "https://images.pexels.com/photos/2115256/pexels-photo-2115256.jpeg?auto=compress&cs=tinysrgb&w=1200"}
         ]
 
         for product in default_products:
